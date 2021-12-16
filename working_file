@@ -1,0 +1,123 @@
+import sys
+
+import pygame
+pygame.init()
+
+
+class Game:
+    def __init__(self, size, screen):
+        self.size = size
+        self.sound_key = pygame.mixer.Sound('../SOUNDS/KEY2.mp3')
+        self.g = 0
+        self.screen = screen
+        self.x_hero = self.wall_x = 8
+        self.y_hero = self.wall_y = 8
+        self.rect2 = (self.x_hero, self.y_hero, 55, 129)
+        self.speed = 10
+        self.key_invent = False
+        self.image_hero_list = [
+            pygame.image.load('../IMAGE_GAME/IMAGE_HERO_D/anonimus1.png'),
+            pygame.image.load('../IMAGE_GAME/IMAGE_HERO_D/anonimus2.png')]
+
+        self.count = 0
+        self.coord_key = [600, 300]
+        self.coord_padlock = [size[0] - 50, size[1] // 2 - 100, 50, 150]
+        self.key_finally = (1220, 10)
+        self.speed_key = 10
+
+    def move(self, keys):
+        if keys[pygame.K_SPACE]:
+            sys.exit()
+        if keys[pygame.K_s] and self.walls('down'):
+            self.y_hero += self.speed
+        elif keys[pygame.K_w] and self.walls('up'):
+            self.y_hero -= self.speed
+        if keys[pygame.K_d] and self.walls('right'):
+            self.x_hero += self.speed
+        elif keys[pygame.K_a] and self.walls('left'):
+            self.x_hero -= self.speed
+        self.rect2 = (self.x_hero, self.y_hero, 55, 129)
+
+    def walls(self, arg):
+        if arg == 'up':
+            if self.y_hero < self.wall_y + 5:
+                return 0
+            else:
+                return 1
+        elif arg == 'down':
+            if self.y_hero > self.size[1] - 135:
+                return 0
+            else:
+                return 1
+        if arg == 'left':
+            if self.x_hero < self.wall_x + 5:
+                return 0
+            else:
+                return 1
+        elif arg == 'right':
+            if self.x_hero > self.size[0] - 60:
+                return 0
+            else:
+                return 1
+
+    def render(self):
+        if self.count >= 8:
+            self.count = 0
+        self.image_hero = self.image_hero_list[self.count // 4]
+        self.count += 1
+
+    def key(self):
+        self.rect1 = (*self.coord_key, 50, 30)
+        if self.does_collide():
+            self.key_invent = True
+            self.sound_key.play()
+            a.coord_key = [1210, 10]
+
+    def exit(self):
+        self.rect1 = self.coord_padlock
+        if self.does_collide():
+            sys.exit()
+
+    def does_collide(self):
+        if self.rect1[0] <= self.rect2[0] + self.rect2[2] and self.rect1[0] + self.rect1[2] >= self.rect2[0] \
+                and self.rect1[1] <= self.rect2[1] + self.rect2[3] and self.rect1[3] + self.rect1[1] >= self.rect2[1]:
+            return True
+        else:
+            return False
+
+
+pygame.init()
+pygame.mixer.music.load('../SOUNDS/sound_bg1.ogg')
+pygame.mixer.music.set_volume(0.1)
+sound_win_level = pygame.mixer.Sound('../SOUNDS/WIN_LEVEL.mp3')
+pygame.mixer.music.play(-1)
+t = 0
+size = (1280, 720)
+screen = pygame.display.set_mode(size)
+bg = pygame.image.load('../IMAGE_GAME/IMAGE_MAP/MAP1.png')
+key = pygame.image.load('../IMAGE_GAME/IMAGE_MAP/KEY.png')
+passage = pygame.image.load('../IMAGE_GAME/IMAGE_MAP/EXIT.png')
+a = Game(size, screen)
+clock = pygame.time.Clock()
+run = 1
+while run:
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                run = 0
+        elif event.type == pygame.QUIT:
+            run = 0
+    a.render()
+    if not a.key_invent:
+        a.key()
+    else:
+        a.exit()
+    screen.blit(bg, (0, 0))
+    screen.blit(key, (a.coord_key[0], a.coord_key[1]))
+    screen.blit(passage, a.coord_padlock)
+    keys = pygame.key.get_pressed()
+    if 1 in keys:
+        a.move(keys)
+    screen.blit(a.image_hero, (a.x_hero, a.y_hero))
+    clock.tick(30)
+    pygame.display.update()
